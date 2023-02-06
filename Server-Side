@@ -1,10 +1,10 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
-
+#include <Servo.h>
 #include <ESP8266WiFiMulti.h>
 ESP8266WiFiMulti WiFiMulti;
-
+Servo servo ;
 const char* ssid = "ESP8266-Access-Point";
 const char* password = "123456789";
 
@@ -20,9 +20,10 @@ String spo2;
 
 
 unsigned long previousMillis = 0;
-const long interval = 5000; 
+const long interval = 1000; 
 
 void setup() {
+  servo.attach(0);
   Serial.begin(9600);
   Serial.println();
  
@@ -45,7 +46,7 @@ void loop() {
     if ((WiFiMulti.run() == WL_CONNECTED)) {
       beats = httpGETRequest(serverNameBeats);
       spo2 = httpGETRequest(serverNameSpo2);
-      Serial.println("beats: " + beats + " *C - spo2: " + spo2 + " % ");
+      Serial.println("beats: " + beats + " * - spo2: " + spo2 + " % ");
       
       // save the last HTTP GET Request
       previousMillis = currentMillis;
@@ -53,7 +54,21 @@ void loop() {
     else {
       Serial.println("WiFi Disconnected");
     }
+    }
+
+  float FLOATBeats = beats.toFloat();
+  float FLOATSpo2 = spo2.toFloat();
+
+  if ( FLOATBeats>50 ){
+    Serial.println("normal");
+    servo.write(720);
   }
+  else {
+    Serial.println("abnormal");
+    servo.write(0);
+  }
+
+  
 }
 
 String httpGETRequest(const char* serverName) {
