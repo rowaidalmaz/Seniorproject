@@ -45,7 +45,6 @@ void loop() {
     if ((WiFiMulti.run() == WL_CONNECTED)) {
       beats = httpGETRequest(serverNameBeats);
       spo2 = httpGETRequest(serverNameSpo2);
-      pressure = httpGETRequest(serverNamePres);
       Serial.println("beats: " + beats + " *C - spo2: " + spo2 + " % ");
       
       // save the last HTTP GET Request
