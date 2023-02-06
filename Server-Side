@@ -47,14 +47,6 @@ void loop() {
       beats = httpGETRequest(serverNameBeats);
       spo2 = httpGETRequest(serverNameSpo2);
       Serial.println("beats: " + beats + " * - spo2: " + spo2 + " % ");
-      
-      // save the last HTTP GET Request
-      previousMillis = currentMillis;
-    }
-    else {
-      Serial.println("WiFi Disconnected");
-    }
-    }
 
   float FLOATBeats = beats.toFloat();
   float FLOATSpo2 = spo2.toFloat();
@@ -67,6 +59,15 @@ void loop() {
     Serial.println("abnormal");
     servo.write(0);
   }
+      
+      // save the last HTTP GET Request
+      previousMillis = currentMillis;
+    }
+    else {
+      Serial.println("WiFi Disconnected");
+    }
+    }
+
 
   
 }
