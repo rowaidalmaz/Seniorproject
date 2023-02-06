@@ -1,0 +1,94 @@
+
+// Import required libraries
+#include <ESP8266WiFi.h>
+#include "ESPAsyncWebServer.h"
+#include <Wire.h>
+#include "MAX30100_PulseOximeter.h"
+
+#define REPORTING_PERIOD_MS     1000
+
+// Create a PulseOximeter object
+PulseOximeter pox;
+uint32_t tsLastReport = 0;
+
+void onBeatDetected() {
+    Serial.println("♥ Beat!");
+}
+// Set your access point network credentials
+const char* ssid = "ESP8266-Access-Point";
+const char* password = "123456789";
+
+
+AsyncWebServer server(80);
+
+String readeBeats() {
+
+  pox.update();
+  return String(pox.getHeartRate());
+  //return String(1.8 * bme.readTemperature() + 32);
+}
+
+String readeSpo2() {
+  pox.update();
+  return String(pox.getSpO2());
+  //return String(1.8 * bme.readTemperature() + 32);
+}
+
+
+
+void setup(){
+  // Serial port for debugging purposes
+  Serial.begin(9600);
+  Serial.println();
+  
+  // Setting the ESP as an access point
+  Serial.print("Setting AP (Access Point)…");
+  // Remove the password parameter, if you want the AP (Access Point) to be open
+  WiFi.softAP(ssid, password);
+
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(IP);
+
+ 
+    server.on("/beats", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/plain", readeBeats().c_str());
+  });
+
+  server.on("/spo2", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/plain", readeSpo2().c_str());
+  });
+  
+  //Initialize sensor
+    if (!pox.begin()) {
+        Serial.println("FAILED");
+        for(;;);
+    } else {
+        Serial.println("SUCCESS");
+    }
+
+  pox.setIRLedCurrent(MAX30100_LED_CURR_7_6MA);
+
+    pox.setOnBeatDetectedCallback(onBeatDetected);
+  //Start server
+  server.begin();
+}
+ 
+void loop(){
+
+
+    pox.update();
+
+  // String beat=readeBeats();
+  // String spo=readeSpo2();
+  
+  if (millis() - tsLastReport > REPORTING_PERIOD_MS) {
+        Serial.print("Heart rate:");
+        Serial.print(pox.getHeartRate());
+        Serial.print("bpm / SpO2:");
+        Serial.print(pox.getSpO2());
+        Serial.println("%");
+
+        tsLastReport = millis();
+    }
+}
